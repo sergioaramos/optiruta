@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { usePatients } from '../context/PatientsContext.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 import { getLastRoute } from '../modules/storage.js'
 import { formatDuration, formatDistance } from '../modules/routing.js'
 import { PERSONAL_MODE, personal, getMotivationalMessage } from '../config/personal.js'
@@ -19,6 +20,7 @@ function getTodayStr() {
 export default function HomeView() {
   const navigate = useNavigate()
   const { patients } = usePatients()
+  const { signOut, user } = useAuth()
   const lastRoute = getLastRoute()
   const hasLastRoute = lastRoute && lastRoute.stops?.length > 0
   const isToday = hasLastRoute && new Date(lastRoute.savedAt).toDateString() === new Date().toDateString()
@@ -28,8 +30,17 @@ export default function HomeView() {
     <div className="page fade-in">
 
       {/* Hero Banner */}
-      <div className="hero-banner" style={{ marginBottom: 22 }}>
-        <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.85)', marginBottom: 4 }}>{getTodayStr()}</p>
+      <div className="hero-banner" style={{ marginBottom: 22, position: 'relative' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+          <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.85)', margin: 0 }}>{getTodayStr()}</p>
+          <button
+            onClick={signOut}
+            title={`Cerrar sesión (${user?.email})`}
+            style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 999, padding: '4px 10px', fontSize: '0.72rem', color: 'rgba(255,255,255,0.85)', cursor: 'pointer' }}
+          >
+            Salir
+          </button>
+        </div>
         <h1 style={{ color: '#fff', fontSize: '1.6rem', marginBottom: 6 }}>
           {getGreeting()}{PERSONAL_MODE ? `, ${personal.nickname}` : ''} 👋
         </h1>
