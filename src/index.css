@@ -384,6 +384,7 @@ p  { line-height: 1.6; color: var(--text-muted); }
   width: 140px; height: 140px;
   background: rgba(255,255,255,0.08);
   border-radius: 50%;
+  pointer-events: none;
 }
 .hero-banner::after {
   content: '';
@@ -391,6 +392,7 @@ p  { line-height: 1.6; color: var(--text-muted); }
   width: 90px; height: 90px;
   background: rgba(255,255,255,0.05);
   border-radius: 50%;
+  pointer-events: none;
 }
 
 /* --- Skeleton --- */
