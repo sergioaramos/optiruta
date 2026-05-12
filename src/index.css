@@ -395,6 +395,41 @@ p  { line-height: 1.6; color: var(--text-muted); }
   pointer-events: none;
 }
 
+/* --- Visits / Evoluciones --- */
+.visit-history-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 13px 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+.condition-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 11px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  background: var(--surface-2);
+  cursor: pointer;
+  font-size: 0.81rem;
+  color: var(--text-muted);
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+}
+.condition-chip:hover {
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+.condition-chip-hint {
+  font-size: 0.65rem;
+  opacity: 0.45;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
 /* --- Skeleton --- */
 .skeleton {
   background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);

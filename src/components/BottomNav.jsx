@@ -1,10 +1,11 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const NAV_ITEMS = [
-  { path: '/',          icon: '🏠', label: 'Inicio' },
-  { path: '/planificar', icon: '🗓️', label: 'Planificar' },
-  { path: '/ruta',      icon: '🗺️', label: 'Ruta' },
-  { path: '/pacientes', icon: '👥', label: 'Pacientes' },
+  { path: '/',            icon: '🏠', label: 'Inicio' },
+  { path: '/planificar',  icon: '🗓️', label: 'Planificar' },
+  { path: '/ruta',        icon: '🗺️', label: 'Ruta' },
+  { path: '/pacientes',   icon: '👥', label: 'Pacientes' },
+  { path: '/evoluciones', icon: '📋', label: 'Evoluciones' },
 ]
 
 export default function BottomNav() {

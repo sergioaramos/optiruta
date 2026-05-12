@@ -2,11 +2,13 @@ import { Routes, Route } from 'react-router-dom'
 import { ToastProvider } from './context/ToastContext.jsx'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import { PatientsProvider } from './context/PatientsContext.jsx'
+import { VisitsProvider } from './context/VisitsContext.jsx'
 import BottomNav from './components/BottomNav.jsx'
 import HomeView from './views/HomeView.jsx'
 import PlanifierView from './views/PlanifierView.jsx'
 import RouteView from './views/RouteView.jsx'
 import PatientsView from './views/PatientsView.jsx'
+import EvolutionsView from './views/EvolutionsView.jsx'
 import LoginView from './views/LoginView.jsx'
 
 function AppShell() {
@@ -27,17 +29,20 @@ function AppShell() {
   // Con sesión → App
   return (
     <PatientsProvider>
-      <div className="app-container">
-        <main className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
-          <Routes>
-            <Route path="/" element={<HomeView />} />
-            <Route path="/planificar" element={<PlanifierView />} />
-            <Route path="/ruta" element={<RouteView />} />
-            <Route path="/pacientes" element={<PatientsView />} />
-          </Routes>
-        </main>
-        <BottomNav />
-      </div>
+      <VisitsProvider>
+        <div className="app-container">
+          <main className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
+            <Routes>
+              <Route path="/" element={<HomeView />} />
+              <Route path="/planificar" element={<PlanifierView />} />
+              <Route path="/ruta" element={<RouteView />} />
+              <Route path="/pacientes" element={<PatientsView />} />
+              <Route path="/evoluciones" element={<EvolutionsView />} />
+            </Routes>
+          </main>
+          <BottomNav />
+        </div>
+      </VisitsProvider>
     </PatientsProvider>
   )
 }

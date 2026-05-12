@@ -4,6 +4,7 @@ import { usePatients } from '../context/PatientsContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { exportPatientsExcel, importPatientsExcel } from '../modules/patients_excel.js'
 import PatientModal from '../components/PatientModal.jsx'
+import PatientHistoryModal from '../components/PatientHistoryModal.jsx'
 
 export default function PatientsView() {
   const navigate = useNavigate()
@@ -13,6 +14,7 @@ export default function PatientsView() {
   const [showModal, setShowModal] = useState(false)
   const [editPatient, setEditPatient] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [historyPatient, setHistoryPatient] = useState(null)
 
   const filtered = patients.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -100,6 +102,7 @@ export default function PatientsView() {
                   {p.notes && <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 6 }}>📝 {p.notes}</div>}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+                  <button className="btn btn-ghost btn-icon" onClick={() => setHistoryPatient(p)} title="Historial de visitas" style={{ color: 'var(--primary)', fontSize: '0.9rem' }}>📋</button>
                   <button className="btn btn-ghost btn-icon" onClick={() => { setEditPatient(p); setShowModal(true) }} id={`btn-edit-${p.id}`} title="Editar" style={{ color: 'var(--primary)' }}>✏️</button>
                   <button className="btn btn-danger btn-icon" onClick={() => setConfirmDelete(p)} id={`btn-delete-${p.id}`} title="Eliminar">🗑️</button>
                 </div>
@@ -143,6 +146,10 @@ export default function PatientsView() {
 
       {showModal && (
         <PatientModal initialData={editPatient} onClose={() => { setShowModal(false); setEditPatient(null) }} />
+      )}
+
+      {historyPatient && (
+        <PatientHistoryModal patient={historyPatient} onClose={() => setHistoryPatient(null)} />
       )}
     </div>
   )

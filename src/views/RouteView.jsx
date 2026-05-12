@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getLastRoute, saveLastRoute } from '../modules/storage.js'
 import { formatDuration, formatDistance, getRoute } from '../modules/routing.js'
 import { buildWhatsAppText, copyToClipboard, openGoogleMaps, openWaze, printRoute } from '../modules/exporter.js'
 import { useToast } from '../context/ToastContext.jsx'
+import { useVisits, todayLocal } from '../context/VisitsContext.jsx'
 import RouteMap from '../components/RouteMap.jsx'
+import VisitModal from '../components/VisitModal.jsx'
 
 function formatTime(isoString, offsetMins) {
   const d = new Date(new Date(isoString).getTime() + offsetMins * 60000)
@@ -14,9 +16,19 @@ function formatTime(isoString, offsetMins) {
 export default function RouteView() {
   const navigate = useNavigate()
   const toast = useToast()
+  const { visits, fetchVisits, upsertVisit } = useVisits()
   const [route, setRoute] = useState(() => getLastRoute())
   const [showExport, setShowExport] = useState(false)
   const [editMode, setEditMode] = useState(false)
+  const [visitModal, setVisitModal] = useState(null) // { patientId, patientName, existingVisit }
+
+  // Load today's visits to show status badges
+  useEffect(() => {
+    fetchVisits({ date: todayLocal() })
+  }, [fetchVisits])
+
+  // Map patientId → visit for quick lookup
+  const visitByPatient = Object.fromEntries(visits.map(v => [v.patientId, v]))
 
   if (!route || !route.stops?.length) {
     return (
@@ -168,6 +180,45 @@ export default function RouteView() {
                   📝 {stop.notes}
                 </div>
               )}
+              {/* Visit action row */}
+              {stop.id && (() => {
+                const existingVisit = visitByPatient[stop.id]
+                const ATTENDANCE_COLORS = { presente: '#10b981', ausente: '#ef4444', no_colabora: '#f59e0b' }
+                const acColor = existingVisit ? (ATTENDANCE_COLORS[existingVisit.attendance] || '#64748b') : null
+                return (
+                  <div style={{ marginTop: 9, display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <button
+                      className="btn btn-sm"
+                      style={{
+                        background: existingVisit ? `${acColor}15` : 'var(--surface-2)',
+                        border: `1.5px solid ${existingVisit ? acColor : 'var(--border)'}`,
+                        color: existingVisit ? acColor : 'var(--text-muted)',
+                        borderRadius: 999,
+                        fontSize: '0.76rem',
+                        fontWeight: existingVisit ? 600 : 400,
+                      }}
+                      onClick={() => setVisitModal({ patientId: stop.id, patientName: stop.name, existingVisit: existingVisit || null })}
+                    >
+                      {existingVisit ? `📋 Ver / editar visita` : '📋 Registrar visita'}
+                    </button>
+                    {existingVisit && existingVisit.evolutionText && (
+                      <button
+                        className="btn btn-sm btn-ghost"
+                        style={{ fontSize: '0.76rem', color: 'var(--primary)' }}
+                        title="Copiar evolución"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(existingVisit.evolutionText)
+                            toast.success('¡Evolución copiada! 📋')
+                          } catch { toast.error('No se pudo copiar') }
+                        }}
+                      >
+                        📋 Copiar texto
+                      </button>
+                    )}
+                  </div>
+                )
+              })()}
             </div>
             {editMode && (
               <button
@@ -212,6 +263,17 @@ export default function RouteView() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Visit modal */}
+      {visitModal && (
+        <VisitModal
+          patientId={visitModal.patientId}
+          patientName={visitModal.patientName}
+          existingVisit={visitModal.existingVisit}
+          onClose={() => setVisitModal(null)}
+          onSaved={() => fetchVisits({ date: todayLocal() })}
+        />
       )}
     </div>
   )
