@@ -3,6 +3,7 @@ import { useVisits, CONDITION_LABELS, ATTENDANCE_LABELS } from '../context/Visit
 import { useToast } from '../context/ToastContext.jsx'
 import { exportVisitsExcel } from '../modules/visits_export.js'
 import VisitModal from './VisitModal.jsx'
+import VisitFiles from './VisitFiles.jsx'
 
 const ATTENDANCE_COLORS = {
   presente: '#10b981',
@@ -52,8 +53,9 @@ function VisitCard({ visit, onEdit, onDelete, onCopy }) {
             <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 5, lineHeight: 1.4 }}>
               {visit.conditionNotes.length > 100 ? visit.conditionNotes.slice(0, 100) + '…' : visit.conditionNotes}
             </div>
-          )}
-        </div>
+          )}          <div style={{ marginTop: 8 }}>
+            <VisitFiles visitId={visit.id} readOnly={true} />
+          </div>        </div>
         <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
           <button className="btn btn-ghost btn-icon" onClick={onCopy} title="Copiar evolución" style={{ fontSize: '0.9rem' }}>📋</button>
           <button className="btn btn-ghost btn-icon" onClick={onEdit} title="Editar visita" style={{ color: 'var(--primary)', fontSize: '0.9rem' }}>✏️</button>

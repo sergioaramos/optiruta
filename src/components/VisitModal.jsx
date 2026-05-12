@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useVisits } from '../context/VisitsContext.jsx'
 import { usePatients } from '../context/PatientsContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
+import VisitFiles from './VisitFiles.jsx'
 
 const CONDITIONS = [
   {
@@ -149,6 +150,7 @@ export default function VisitModal({ patientId, patientName, existingVisit, onCl
   const [treatmentDone, setTreatmentDone] = useState(existingVisit?.treatmentDone ?? '')
   const [evolutionText, setEvolutionText] = useState(existingVisit?.evolutionText ?? '')
   const [textEdited, setTextEdited] = useState(false)
+  const [savedVisitId, setSavedVisitId] = useState(existingVisit?.id ?? null)
 
   // Auto-regenerate evolution text when fields change
   useEffect(() => {
@@ -200,9 +202,9 @@ export default function VisitModal({ patientId, patientName, existingVisit, onCl
         treatmentDone,
         evolutionText,
       })
+      setSavedVisitId(saved.id)
       toast.success('Visita guardada ✓')
       onSaved?.(saved)
-      onClose()
     } catch (e) {
       toast.error('Error al guardar: ' + e.message)
     }
@@ -409,14 +411,24 @@ export default function VisitModal({ patientId, patientName, existingVisit, onCl
           </p>
         </div>
 
+        {/* Archivos adjuntos */}
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <VisitFiles visitId={savedVisitId} readOnly={false} />
+        </div>
+
         {/* Actions */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: savedVisitId ? '1fr 1fr 1fr' : '1fr 1fr', gap: 9 }}>
           <button className="btn btn-outline" onClick={handleCopy} disabled={!evolutionText}>
             📋 Copiar texto
           </button>
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-            {saving ? <span className="spinner" style={{ width: 18, height: 18 }} /> : '💾 Guardar visita'}
+            {saving ? <span className="spinner" style={{ width: 18, height: 18 }} /> : (savedVisitId ? '💾 Actualizar' : '💾 Guardar visita')}
           </button>
+          {savedVisitId && (
+            <button className="btn btn-secondary" onClick={onClose}>
+              ✓ Listo
+            </button>
+          )}
         </div>
       </div>
     </div>

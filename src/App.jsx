@@ -3,6 +3,7 @@ import { ToastProvider } from './context/ToastContext.jsx'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import { PatientsProvider } from './context/PatientsContext.jsx'
 import { VisitsProvider } from './context/VisitsContext.jsx'
+import { FilesProvider } from './context/FilesContext.jsx'
 import BottomNav from './components/BottomNav.jsx'
 import HomeView from './views/HomeView.jsx'
 import PlanifierView from './views/PlanifierView.jsx'
@@ -30,6 +31,7 @@ function AppShell() {
   return (
     <PatientsProvider>
       <VisitsProvider>
+        <FilesProvider>
         <div className="app-container">
           <main className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
             <Routes>
@@ -42,6 +44,7 @@ function AppShell() {
           </main>
           <BottomNav />
         </div>
+        </FilesProvider>
       </VisitsProvider>
     </PatientsProvider>
   )
