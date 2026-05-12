@@ -1,28 +1,53 @@
 import { Routes, Route } from 'react-router-dom'
 import { ToastProvider } from './context/ToastContext.jsx'
+import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import { PatientsProvider } from './context/PatientsContext.jsx'
 import BottomNav from './components/BottomNav.jsx'
 import HomeView from './views/HomeView.jsx'
 import PlanifierView from './views/PlanifierView.jsx'
 import RouteView from './views/RouteView.jsx'
 import PatientsView from './views/PatientsView.jsx'
+import LoginView from './views/LoginView.jsx'
+
+function AppShell() {
+  const { session } = useAuth()
+
+  // Aún cargando la sesión
+  if (session === undefined) {
+    return (
+      <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span className="spinner" style={{ width: 36, height: 36 }} />
+      </div>
+    )
+  }
+
+  // Sin sesión → Login
+  if (!session) return <LoginView />
+
+  // Con sesión → App
+  return (
+    <PatientsProvider>
+      <div className="app-container">
+        <main className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
+          <Routes>
+            <Route path="/" element={<HomeView />} />
+            <Route path="/planificar" element={<PlanifierView />} />
+            <Route path="/ruta" element={<RouteView />} />
+            <Route path="/pacientes" element={<PatientsView />} />
+          </Routes>
+        </main>
+        <BottomNav />
+      </div>
+    </PatientsProvider>
+  )
+}
 
 export default function App() {
   return (
     <ToastProvider>
-      <PatientsProvider>
-        <div className="app-container">
-          <main className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
-            <Routes>
-              <Route path="/" element={<HomeView />} />
-              <Route path="/planificar" element={<PlanifierView />} />
-              <Route path="/ruta" element={<RouteView />} />
-              <Route path="/pacientes" element={<PatientsView />} />
-            </Routes>
-          </main>
-          <BottomNav />
-        </div>
-      </PatientsProvider>
+      <AuthProvider>
+        <AppShell />
+      </AuthProvider>
     </ToastProvider>
   )
 }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePatients } from '../context/PatientsContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 import { exportPatientsExcel, importPatientsExcel } from '../modules/patients_excel.js'
 import PatientModal from '../components/PatientModal.jsx'
 
@@ -9,6 +10,7 @@ export default function PatientsView() {
   const navigate = useNavigate()
   const { patients, remove } = usePatients()
   const toast = useToast()
+  const { signOut, user } = useAuth()
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editPatient, setEditPatient] = useState(null)
@@ -62,6 +64,14 @@ export default function PatientsView() {
           + Nuevo
         </button>
       </div>
+
+      {/* User info + logout */}
+      {user && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: '8px 12px', background: 'var(--surface-2)', borderRadius: 'var(--radius)', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          <span>👤 {user.email}</span>
+          <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', fontSize: '0.78rem' }} onClick={signOut}>Cerrar sesión</button>
+        </div>
+      )}
 
       {/* Search */}
       <div className="form-input-icon" style={{ marginBottom: 16 }}>
