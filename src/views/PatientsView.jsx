@@ -96,8 +96,8 @@ export default function PatientsView() {
                   <div className="patient-name" style={{ fontSize: '0.97rem' }}>{p.name}</div>
                   <div className="patient-address">📍 {p.address}{p.addressDetail ? ` · ${p.addressDetail}` : ''}</div>
                   <div style={{ display: 'flex', gap: 7, marginTop: 6, flexWrap: 'wrap' }}>
-                    {p.phone && <span className="badge badge-primary">📞 {p.phone}</span>}
-                    {p.phone2 && <span className="badge badge-primary">📞 {p.phone2}</span>}
+                    {p.phone && <a href={`tel:${p.phone}`} className="badge badge-primary" style={{ textDecoration: 'none', cursor: 'pointer' }}>📞 {p.phone}</a>}
+                    {p.phone2 && <a href={`tel:${p.phone2}`} className="badge badge-primary" style={{ textDecoration: 'none', cursor: 'pointer' }}>📞 {p.phone2}</a>}
                     {p.bloodType && <span className="badge" style={{ background: 'rgba(239,68,68,0.1)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.3)' }}>🩸 {p.bloodType}</span>}
                     <span className="badge badge-success">⏱️ {p.visitDuration || 20} min</span>
                   </div>
@@ -109,6 +109,9 @@ export default function PatientsView() {
                   {p.notes && <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>📝 {p.notes}</div>}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+                  {p.phone && (
+                    <a href={`tel:${p.phone}`} className="btn btn-ghost btn-icon" title={`Llamar a ${p.name}`} style={{ color: '#10b981', fontSize: '1rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>📲</a>
+                  )}
                   <button className="btn btn-ghost btn-icon" onClick={() => setHistoryPatient(p)} title="Historial de visitas" style={{ color: 'var(--primary)', fontSize: '0.9rem' }}>📋</button>
                   <button className="btn btn-ghost btn-icon" onClick={() => { setEditPatient(p); setShowModal(true) }} id={`btn-edit-${p.id}`} title="Editar" style={{ color: 'var(--primary)' }}>✏️</button>
                   <button className="btn btn-danger btn-icon" onClick={() => setConfirmDelete(p)} id={`btn-delete-${p.id}`} title="Eliminar">🗑️</button>
