@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { usePatients } from '../context/PatientsContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { getSettings } from '../modules/storage.js'
+import AddressAutocomplete from './AddressAutocomplete.jsx'
 
 export default function PatientModal({ onClose, onSelect, initialData = null }) {
   const { add, update } = usePatients()
@@ -12,6 +13,8 @@ export default function PatientModal({ onClose, onSelect, initialData = null }) 
   const [form, setForm] = useState({
     name: initialData?.name || '',
     address: initialData?.address || '',
+    lat: initialData?.lat ?? null,
+    lng: initialData?.lng ?? null,
     phone: initialData?.phone || '',
     notes: initialData?.notes || '',
     visitDuration: initialData?.visitDuration ?? settings.defaultDuration,
@@ -63,16 +66,17 @@ export default function PatientModal({ onClose, onSelect, initialData = null }) 
 
           <div className="form-group">
             <label className="form-label">Dirección *</label>
-            <div className="form-input-icon">
-              <span className="input-icon">📍</span>
-              <input
-                className="form-input"
-                placeholder="Ej: Cra 23 #45-12, Manizales"
-                value={form.address}
-                onChange={e => set('address', e.target.value)}
-                id="patient-address-input"
-              />
-            </div>
+            <AddressAutocomplete
+              value={form.address}
+              onChange={(addr) => set('address', addr)}
+              onSelect={({ address, lat, lng }) => setForm(f => ({ ...f, address, lat, lng }))}
+              id="patient-address-input"
+            />
+            {form.lat && (
+              <p style={{ fontSize: '0.72rem', color: 'var(--success)', marginTop: 4 }}>
+                ✅ Ubicación verificada en el mapa
+              </p>
+            )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

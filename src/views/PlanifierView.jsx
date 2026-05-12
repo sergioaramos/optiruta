@@ -109,12 +109,18 @@ export default function PlanifierView() {
       }
       setLoadStep(1)
 
-      // 2. Geocode all stops
-      setLoadMsg('Geocodificando direcciones...')
+      // 2. Geocode all stops (skip if coords already saved)
+      setLoadMsg('Verificando ubicaciones...')
       const stops = []
       for (let i = 0; i < selected.length; i++) {
         const s = selected[i]
-        setLoadMsg(`Geocodificando ${i + 1}/${selected.length}: ${s.name}`)
+        // Use stored coords if available — no API call needed
+        if (s.lat && s.lng) {
+          stops.push({ ...s })
+          setLoadStep(2 + i)
+          continue
+        }
+        setLoadMsg(`Buscando ubicación ${i + 1}/${selected.length}: ${s.name}`)
         try {
           const coords = await geocodeAddress(s.address)
           stops.push({ ...s, lat: coords.lat, lng: coords.lng })

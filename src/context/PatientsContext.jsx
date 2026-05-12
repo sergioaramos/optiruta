@@ -14,6 +14,8 @@ function toLocal(row) {
     phone: row.phone ?? '',
     notes: row.notes ?? '',
     visitDuration: row.visit_duration ?? 20,
+    lat: row.lat ?? null,
+    lng: row.lng ?? null,
     createdAt: row.created_at,
   }
 }
@@ -27,6 +29,8 @@ function toRow(data, userId) {
     phone: data.phone ?? '',
     notes: data.notes ?? '',
     visit_duration: data.visitDuration ?? 20,
+    lat: data.lat ?? null,
+    lng: data.lng ?? null,
   }
 }
 
