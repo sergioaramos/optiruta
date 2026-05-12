@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useVisits } from '../context/VisitsContext.jsx'
+import { usePatients } from '../context/PatientsContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 
 const CONDITIONS = [
@@ -71,7 +72,7 @@ const isoToTime = (iso) => {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
-function generateEvolutionText({ patientName, arrivedAtTime, departedAtTime, attendance, patientCondition, conditionNotes, treatmentDone }) {
+function generateEvolutionText({ patientName, arrivedAtTime, departedAtTime, attendance, patientCondition, conditionNotes, treatmentDone, companion, companionRelation }) {
   const today = new Date()
   const dateStr = today.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
@@ -107,6 +108,10 @@ function generateEvolutionText({ patientName, arrivedAtTime, departedAtTime, att
   if (timeParts.length) text += timeParts.join(' | ') + '\n'
 
   text += `\nAsistencia: ${attendLabels[attendance] || attendance}\n`
+  if (companion) {
+    const relStr = companionRelation ? ` (${companionRelation})` : ''
+    text += `Acompañante: ${companion}${relStr}\n`
+  }
 
   if (attendance === 'ausente') {
     if (conditionNotes) text += `\nObservaciones:\n${conditionNotes}\n`
@@ -124,8 +129,13 @@ function generateEvolutionText({ patientName, arrivedAtTime, departedAtTime, att
 
 export default function VisitModal({ patientId, patientName, existingVisit, onClose, onSaved }) {
   const { upsertVisit } = useVisits()
+  const { patients } = usePatients()
   const toast = useToast()
   const [saving, setSaving] = useState(false)
+  const [improving, setImproving] = useState(null) // 'observaciones' | 'intervencion'
+
+  // Get full patient data for companion info
+  const patient = patients.find(p => p.id === patientId)
 
   const [attendance, setAttendance] = useState(existingVisit?.attendance ?? 'presente')
   const [arrivedAtTime, setArrivedAtTime] = useState(
@@ -145,8 +155,34 @@ export default function VisitModal({ patientId, patientName, existingVisit, onCl
     if (textEdited) return
     setEvolutionText(generateEvolutionText({
       patientName, arrivedAtTime, departedAtTime, attendance, patientCondition, conditionNotes, treatmentDone,
+      companion: patient?.companion || '',
+      companionRelation: patient?.companionRelation || '',
     }))
-  }, [patientName, arrivedAtTime, departedAtTime, attendance, patientCondition, conditionNotes, treatmentDone, textEdited])
+  }, [patientName, arrivedAtTime, departedAtTime, attendance, patientCondition, conditionNotes, treatmentDone, textEdited, patient])
+
+  const handleImprove = async (fieldType) => {
+    const text = fieldType === 'intervencion' ? treatmentDone : conditionNotes
+    if (!text?.trim()) { toast.error('Escribe algo primero para mejorar'); return }
+    setImproving(fieldType)
+    try {
+      const res = await fetch('/api/improve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, fieldType }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error desconocido')
+      if (fieldType === 'intervencion') {
+        setTreatmentDone(data.improved)
+      } else {
+        setConditionNotes(data.improved)
+      }
+      toast.success('✨ Redacción mejorada')
+    } catch (e) {
+      toast.error('Error IA: ' + e.message)
+    }
+    setImproving(null)
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -184,11 +220,11 @@ export default function VisitModal({ patientId, patientName, existingVisit, onCl
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal" style={{ maxHeight: '92dvh', overflowY: 'auto' }}>
+      <div className="modal" style={{ maxHeight: '92dvh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div className="drag-handle"><span /></div>
 
         {/* Header */}
-        <div className="modal-header">
+        <div className="modal-header" style={{ marginBottom: 0 }}>
           <div>
             <h3 className="modal-title">📋 Registrar visita</h3>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>{patientName}</div>
@@ -197,7 +233,7 @@ export default function VisitModal({ patientId, patientName, existingVisit, onCl
         </div>
 
         {/* Attendance */}
-        <div className="form-group">
+        <div className="form-group" style={{ marginBottom: 0 }}>
           <label className="form-label">Asistencia del paciente</label>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {[
@@ -224,12 +260,12 @@ export default function VisitModal({ patientId, patientName, existingVisit, onCl
         </div>
 
         {/* Times */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <div className="form-group">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Hora llegada</label>
             <input className="form-input" type="time" value={arrivedAtTime} onChange={e => setArrivedAtTime(e.target.value)} />
           </div>
-          <div className="form-group">
+          <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Hora salida</label>
             <div style={{ display: 'flex', gap: 6 }}>
               <input
@@ -255,7 +291,7 @@ export default function VisitModal({ patientId, patientName, existingVisit, onCl
 
         {/* Condition chips — only if not absent */}
         {attendance !== 'ausente' && (
-          <div className="form-group">
+          <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">
               Estado clínico del paciente
               <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400, marginLeft: 6 }}>
@@ -287,10 +323,25 @@ export default function VisitModal({ patientId, patientName, existingVisit, onCl
         )}
 
         {/* Observations */}
-        <div className="form-group">
-          <label className="form-label">
-            {attendance === 'ausente' ? 'Observaciones / Motivo' : 'Observaciones clínicas'}
-          </label>
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <label className="form-label" style={{ margin: 0 }}>
+              {attendance === 'ausente' ? 'Observaciones / Motivo' : 'Observaciones clínicas'}
+            </label>
+            {attendance !== 'ausente' && (
+              <button
+                className="btn btn-sm"
+                style={{ fontSize: '0.72rem', borderRadius: 999, background: 'linear-gradient(135deg,#a855f7,#6366f1)', color: '#fff', border: 'none', padding: '3px 10px', display: 'flex', alignItems: 'center', gap: 4 }}
+                onClick={() => handleImprove('observaciones')}
+                disabled={improving !== null}
+                title="Mejorar redacción con IA"
+              >
+                {improving === 'observaciones'
+                  ? <><span className="spinner" style={{ width: 12, height: 12, borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }} /> Mejorando...</>
+                  : '✨ Mejorar con IA'}
+              </button>
+            )}
+          </div>
           <textarea
             className="form-input"
             rows={3}
@@ -307,8 +358,21 @@ export default function VisitModal({ patientId, patientName, existingVisit, onCl
 
         {/* Treatment done — only if present */}
         {attendance !== 'ausente' && (
-          <div className="form-group">
-            <label className="form-label">Intervención realizada</label>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <label className="form-label" style={{ margin: 0 }}>Intervención realizada</label>
+              <button
+                className="btn btn-sm"
+                style={{ fontSize: '0.72rem', borderRadius: 999, background: 'linear-gradient(135deg,#a855f7,#6366f1)', color: '#fff', border: 'none', padding: '3px 10px', display: 'flex', alignItems: 'center', gap: 4 }}
+                onClick={() => handleImprove('intervencion')}
+                disabled={improving !== null}
+                title="Mejorar redacción con IA"
+              >
+                {improving === 'intervencion'
+                  ? <><span className="spinner" style={{ width: 12, height: 12, borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }} /> Mejorando...</>
+                  : '✨ Mejorar con IA'}
+              </button>
+            </div>
             <textarea
               className="form-input"
               rows={3}
@@ -321,7 +385,7 @@ export default function VisitModal({ patientId, patientName, existingVisit, onCl
         )}
 
         {/* Evolution text preview */}
-        <div className="form-group">
+        <div className="form-group" style={{ marginBottom: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <label className="form-label" style={{ margin: 0 }}>Texto de evolución</label>
             {textEdited && (
@@ -346,7 +410,7 @@ export default function VisitModal({ patientId, patientName, existingVisit, onCl
         </div>
 
         {/* Actions */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginTop: 4 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>
           <button className="btn btn-outline" onClick={handleCopy} disabled={!evolutionText}>
             📋 Copiar texto
           </button>

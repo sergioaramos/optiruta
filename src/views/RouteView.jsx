@@ -143,7 +143,7 @@ export default function RouteView() {
         <button className="btn btn-primary" onClick={handleOpenGMaps} id="btn-open-gmaps">🗺️ Google Maps</button>
         <button className="btn btn-secondary" onClick={() => setShowWaze(true)} id="btn-open-waze">🚗 Waze</button>
         <button className="btn btn-secondary" onClick={() => setShowExport(true)} id="btn-export">📤 Exportar</button>
-        <button className="btn btn-secondary" onClick={() => navigate('/planificar')} id="btn-replan">🔄 Replannear</button>
+        <button className="btn btn-secondary" onClick={() => navigate('/planificar')} id="btn-replan">🔄 Replanear</button>
       </div>
 
       {/* Stop list */}
