@@ -307,7 +307,7 @@ export default function PlanifierView() {
       )}
 
       {/* Optimize button */}
-      <div style={{ position: 'sticky', bottom: 'calc(var(--bottom-nav) + 12px)', marginTop: 20 }}>
+      <div style={{ marginTop: 20, paddingBottom: 'calc(var(--bottom-nav) + 16px)' }}>
         <button
           className="btn btn-primary btn-lg btn-full"
           onClick={handleOptimize}
