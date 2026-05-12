@@ -64,7 +64,18 @@ export function saveLastRoute(route) {
 }
 
 export function getLastRoute() {
-  try { return JSON.parse(localStorage.getItem(KEYS.LAST_ROUTE) || 'null') } catch { return null }
+  try {
+    const data = JSON.parse(localStorage.getItem(KEYS.LAST_ROUTE) || 'null')
+    if (!data) return null
+    // Si la ruta es de otro día, descartarla
+    const savedDay = new Date(data.savedAt).toDateString()
+    const today = new Date().toDateString()
+    if (savedDay !== today) {
+      localStorage.removeItem(KEYS.LAST_ROUTE)
+      return null
+    }
+    return data
+  } catch { return null }
 }
 
 // Settings
