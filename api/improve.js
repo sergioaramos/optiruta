@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -36,19 +36,15 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errText = await response.text()
-      console.error('Gemini API error:', response.status, errText)
-      // Parse Gemini error message for better UX
-      let geminiMsg = ''
-      try { geminiMsg = JSON.parse(errText)?.error?.message || '' } catch (_) {}
-      return res.status(502).json({ error: `Error Gemini ${response.status}: ${geminiMsg || errText.slice(0, 200)}` })
+      let msg = ''
+      try { msg = JSON.parse(errText)?.error?.message || '' } catch (_) {}
+      console.error('Gemini error:', response.status, msg || errText)
+      return res.status(502).json({ error: `Error IA (${response.status}): ${msg || 'intenta de nuevo'}` })
     }
 
     const data = await response.json()
     const improved = data.candidates?.[0]?.content?.parts?.[0]?.text
-
-    if (!improved) {
-      return res.status(500).json({ error: 'La IA no devolvió una respuesta válida.' })
-    }
+    if (!improved) return res.status(500).json({ error: 'La IA no devolvió respuesta.' })
 
     return res.status(200).json({ improved: improved.trim() })
   } catch (err) {
