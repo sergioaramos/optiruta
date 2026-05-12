@@ -51,7 +51,20 @@ export function copyToClipboard(text) {
 }
 
 export function openWaze(lat, lng) {
-  window.open(`https://waze.com/ul?ll=${lat},${lng}&navigate=yes`, '_blank')
+  // Try app deep link first, fall back to web
+  const deepLink = `waze://?ll=${lat},${lng}&navigate=yes`
+  const webLink = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`
+  // On mobile devices try deep link, on desktop use web
+  if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+    window.location.href = deepLink
+    setTimeout(() => window.open(webLink, '_blank'), 1500)
+  } else {
+    window.open(webLink, '_blank')
+  }
+}
+
+export function openWazeToStop(stop) {
+  openWaze(stop.lat, stop.lng)
 }
 
 export function openGoogleMaps(stops) {

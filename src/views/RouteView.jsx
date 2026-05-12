@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getLastRoute, saveLastRoute } from '../modules/storage.js'
 import { formatDuration, formatDistance, getRoute } from '../modules/routing.js'
-import { buildWhatsAppText, copyToClipboard, openGoogleMaps, openWaze, printRoute } from '../modules/exporter.js'
+import { buildWhatsAppText, copyToClipboard, openGoogleMaps, openWazeToStop, printRoute } from '../modules/exporter.js'
 import { useToast } from '../context/ToastContext.jsx'
 import { useVisits, todayLocal } from '../context/VisitsContext.jsx'
 import RouteMap from '../components/RouteMap.jsx'
@@ -20,7 +20,8 @@ export default function RouteView() {
   const [route, setRoute] = useState(() => getLastRoute())
   const [showExport, setShowExport] = useState(false)
   const [editMode, setEditMode] = useState(false)
-  const [visitModal, setVisitModal] = useState(null) // { patientId, patientName, existingVisit }
+  const [visitModal, setVisitModal] = useState(null)
+  const [showWaze, setShowWaze] = useState(false) // { patientId, patientName, existingVisit }
 
   // Load today's visits to show status badges
   useEffect(() => {
@@ -140,7 +141,7 @@ export default function RouteView() {
       {/* Actions */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 18 }}>
         <button className="btn btn-primary" onClick={handleOpenGMaps} id="btn-open-gmaps">🗺️ Google Maps</button>
-        <button className="btn btn-secondary" onClick={() => { const s = stops[0]; if (s) openWaze(s.lat, s.lng) }} id="btn-open-waze">🚗 Waze</button>
+        <button className="btn btn-secondary" onClick={() => setShowWaze(true)} id="btn-open-waze">🚗 Waze</button>
         <button className="btn btn-secondary" onClick={() => setShowExport(true)} id="btn-export">📤 Exportar</button>
         <button className="btn btn-secondary" onClick={() => navigate('/planificar')} id="btn-replan">🔄 Replannear</button>
       </div>
@@ -163,8 +164,8 @@ export default function RouteView() {
             <div className="stop-number">{i + 1}</div>
             <div className="stop-content">
               <div className="stop-name">{stop.name}</div>
-              <div className="stop-address">📍 {stop.address}</div>
-              {stop.phone && <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>📞 {stop.phone}</div>}
+              <div className="stop-address">📍 {stop.address}{stop.addressDetail ? ` · ${stop.addressDetail}` : ''}</div>
+              {stop.phone && <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>📞 {stop.phone}{stop.phone2 ? ` · ${stop.phone2}` : ''}</div>}
               <div className="stop-meta">
                 {stop.legDuration > 0 && (
                   <>
@@ -260,6 +261,54 @@ export default function RouteView() {
               <button className="btn btn-secondary btn-lg" onClick={() => { printRoute(); setShowExport(false) }} id="btn-print-modal">
                 🖨️ Imprimir / Guardar PDF
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Waze stop selector */}
+      {showWaze && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowWaze(false)}>
+          <div className="modal" style={{ maxHeight: '80dvh', overflowY: 'auto' }}>
+            <div className="drag-handle"><span /></div>
+            <div className="modal-header">
+              <div>
+                <h3 className="modal-title">🚗 Abrir en Waze</h3>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                  Waze no soporta rutas multi-parada. Toca la parada a la que quieres navegar.
+                </div>
+              </div>
+              <button className="btn btn-ghost btn-icon" onClick={() => setShowWaze(false)}>✕</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {stopsWithTime.map(({ stop, arrival }, i) => (
+                stop.lat && stop.lng ? (
+                  <button
+                    key={stop.id || i}
+                    className="btn btn-secondary"
+                    style={{ justifyContent: 'flex-start', textAlign: 'left', padding: '12px 14px', gap: 10 }}
+                    onClick={() => { openWazeToStop(stop); setShowWaze(false) }}
+                  >
+                    <span style={{
+                      width: 26, height: 26, borderRadius: '50%', background: 'var(--primary)',
+                      color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '0.78rem', fontWeight: 700, flexShrink: 0,
+                    }}>{i + 1}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{stop.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 1 }}>
+                        🕐 {arrival} · 📍 {stop.address}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--primary)' }}>Navegar →</span>
+                  </button>
+                ) : null
+              ))}
+              {stops.every(s => !s.lat || !s.lng) && (
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: 12 }}>
+                  Sin coordenadas disponibles para las paradas
+                </p>
+              )}
             </div>
           </div>
         </div>
